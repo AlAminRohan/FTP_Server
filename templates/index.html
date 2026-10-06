@@ -4,814 +4,474 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>File Transfer</title>
 
     <style>
-        * {
-            box-sizing: border-box;
+        * { box-sizing: border-box; }
+
+        :root {
+            --desk: #1b1d23;
+            --window: #26282f;
+            --titlebar: #1f2127;
+            --toolbar: #2c2f37;
+            --sidebar: #22242b;
+            --row-hover: #343843;
+            --row-select: #3b4a63;
+            --line: #383b45;
+            --text: #e6e8ee;
+            --muted: #9096a5;
+            --accent: #5b9cf5;
+            --folder: #f2c14e;
         }
+
+        html, body { height: 100%; }
 
         body {
             margin: 0;
-            font-family: Arial, sans-serif;
-            background: #0f172a;
-            color: white;
-        }
-
-        .container {
-            max-width: 850px;
-            margin: auto;
-            padding: 30px 20px 50px;
-        }
-
-        h1 {
-            text-align: center;
-            margin-bottom: 10px;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #94a3b8;
-            margin-bottom: 30px;
-        }
-
-        .card {
-            background: #1e293b;
-            padding: 25px;
-            border-radius: 16px;
-            margin-bottom: 20px;
-        }
-
-        /* =========================
-           UPLOAD
-        ========================= */
-
-        .upload-box {
-            border: 2px dashed #475569;
-            padding: 30px;
-            text-align: center;
-            border-radius: 12px;
-        }
-
-        .upload-box h2 {
-            margin-top: 0;
-        }
-
-        input[type="file"] {
-            margin: 20px 0;
-            width: 100%;
-            color: #cbd5e1;
-        }
-
-        button,
-        .download,
-        .view {
-            border: none;
-            padding: 10px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .upload-button {
-            background: #3b82f6;
-            color: white;
-            width: 100%;
-            font-size: 15px;
-        }
-
-        .upload-button:hover {
-            background: #2563eb;
-        }
-
-        .upload-button:disabled {
-            background: #475569;
-            cursor: not-allowed;
-        }
-
-        /* =========================
-           PROGRESS BAR
-        ========================= */
-
-        .progress-container {
-            display: none;
-            margin-top: 20px;
-        }
-
-        .progress-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-            color: #cbd5e1;
+            font-family: "Segoe UI", "Ubuntu", "Cantarell", system-ui, sans-serif;
             font-size: 14px;
-        }
-
-        .progress-wrapper {
-            width: 100%;
-            height: 14px;
-            background: #334155;
-            border-radius: 20px;
+            background: var(--desk);
+            color: var(--text);
+            margin: 0;
             overflow: hidden;
         }
 
-        .progress {
-            width: 0%;
-            height: 100%;
-            background: #3b82f6;
-            border-radius: 20px;
-            transition: width 0.15s ease;
-        }
-
-        .upload-status {
-            margin-top: 10px;
-            text-align: center;
-            color: #94a3b8;
-            font-size: 14px;
-        }
-
-        /* =========================
-           FILE LIST
-        ========================= */
-
-        .files-header {
+        /* ---------- WINDOW ---------- */
+        .window {
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
+            background: var(--window);
+            overflow: hidden;
+        }
+
+        .titlebar {
+            display: flex;
             align-items: center;
             gap: 10px;
+            padding: 8px 12px;
+            background: var(--titlebar);
+            border-bottom: 1px solid var(--line);
         }
 
-        .files-header h2 {
-            margin: 0;
-        }
+        .titlebar .tab-title { flex: 1; text-align: center; color: var(--muted); font-size: 13px; }
 
-        .file-count {
-            color: #94a3b8;
-            font-size: 14px;
-        }
+        .dots { display: flex; gap: 7px; }
+        .dots i { width: 12px; height: 12px; border-radius: 50%; display: block; }
+        .dots i:nth-child(1) { background: #ff5f57; }
+        .dots i:nth-child(2) { background: #febc2e; }
+        .dots i:nth-child(3) { background: #28c840; }
 
-        .file {
+        /* ---------- TOOLBAR ---------- */
+        .toolbar {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            gap: 15px;
-            padding: 16px 0;
-            border-bottom: 1px solid #334155;
+            gap: 10px;
+            padding: 8px 12px;
+            background: var(--toolbar);
+            border-bottom: 1px solid var(--line);
         }
 
-        .file:last-child {
-            border-bottom: none;
+        .nav-btn {
+            width: 30px; height: 30px;
+            display: grid; place-items: center;
+            border-radius: 6px;
+            color: var(--muted);
+            font-size: 16px;
+            user-select: none;
         }
 
-        .file-info {
-            min-width: 0;
+        .address {
             flex: 1;
-        }
-
-        .file-name {
-            font-weight: bold;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            word-break: break-word;
-        }
-
-        .file-size {
-            display: block;
-            margin-top: 5px;
-            color: #94a3b8;
-            font-size: 13px;
-        }
-
-        .file-actions {
+            min-width: 0;
             display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            justify-content: flex-end;
+            align-items: center;
+            gap: 6px;
+            background: #1b1d23;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            padding: 6px 10px;
+            color: var(--muted);
+            white-space: nowrap;
+            overflow: hidden;
         }
+        .address b { color: var(--text); font-weight: 500; }
 
-        /* =========================
-           ACTION BUTTONS
-        ========================= */
-
-        .view {
-            background: #8b5cf6;
-            color: white;
+        .btn {
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text);
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font: inherit;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
+        .btn:hover { background: var(--row-hover); border-color: var(--line); }
+        .btn:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+        .btn.primary { background: var(--accent); color: #0b1424; font-weight: 600; }
+        .btn.primary:hover { background: #7bb0f8; }
+        .btn:disabled { opacity: .5; cursor: not-allowed; }
+        .btn.danger:hover { background: #7a2b2b; border-color: #a33; }
 
-        .view:hover {
-            background: #7c3aed;
+        /* ---------- BODY ---------- */
+        .body { display: flex; flex: 1; min-height: 0; }
+
+        .sidebar {
+            width: 190px;
+            flex-shrink: 0;
+            background: var(--sidebar);
+            border-right: 1px solid var(--line);
+            padding: 12px 8px;
         }
-
-        .download {
-            background: #22c55e;
-            color: white;
+        .sidebar .group { color: var(--muted); font-size: 12px; padding: 8px 10px 4px; }
+        .sidebar .item {
+            display: flex; align-items: center; gap: 8px;
+            padding: 7px 10px;
+            border-radius: 6px;
+            color: var(--text);
         }
+        .sidebar .item.active { background: var(--row-select); }
 
-        .download:hover {
-            background: #16a34a;
-        }
+        .main { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
 
-        .delete {
-            background: #ef4444;
-            color: white;
-        }
-
-        .delete:hover {
-            background: #dc2626;
-        }
-
-        /* =========================
-           FLASH MESSAGE
-        ========================= */
-
+        /* ---------- FLASH ---------- */
         .message {
-            padding: 12px 15px;
-            margin-bottom: 15px;
+            margin: 10px 12px 0;
+            padding: 8px 12px;
+            border-radius: 6px;
+            background: #1d4d30;
+            border: 1px solid #2f7a4d;
+        }
+        .message.error { background: #5a1f1f; border-color: #8c3535; }
+
+        /* ---------- UPLOAD STRIP ---------- */
+        .upload {
+            margin: 12px;
+            padding: 12px;
+            border: 1px dashed #4a4f5e;
             border-radius: 8px;
-            background: #166534;
-            color: white;
+        }
+        .upload-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        input[type="file"] { flex: 1; min-width: 160px; color: var(--muted); font: inherit; }
+        input[type="file"]::file-selector-button {
+            background: var(--toolbar); color: var(--text);
+            border: 1px solid var(--line); border-radius: 6px;
+            padding: 6px 10px; margin-right: 10px; cursor: pointer; font: inherit;
         }
 
-        .error {
-            background: #991b1b;
+        .progress-container { display: none; margin-top: 12px; }
+        .progress-info { display: flex; justify-content: space-between; margin-bottom: 6px; color: var(--muted); font-size: 13px; }
+        .progress-wrapper { height: 8px; background: #1b1d23; border-radius: 4px; overflow: hidden; }
+        .progress { width: 0%; height: 100%; background: var(--accent); transition: width .15s ease; }
+        .upload-status { margin-top: 6px; color: var(--muted); font-size: 12px; }
+
+        .newfolder { display: flex; gap: 8px; margin-top: 10px; }
+        .newfolder input[type="text"] {
+            flex: 1; min-width: 0;
+            background: #1b1d23; color: var(--text);
+            border: 1px solid var(--line); border-radius: 6px;
+            padding: 6px 10px; font: inherit;
+        }
+        .address a { color: var(--muted); text-decoration: none; padding: 2px 4px; border-radius: 4px; }
+        .address a:hover { background: var(--row-hover); color: var(--text); }
+        .nav-btn.link { text-decoration: none; cursor: pointer; }
+        .nav-btn.link:hover { background: var(--row-hover); color: var(--text); }
+        .nav-btn.off { opacity: .35; }
+        .file-name a { color: inherit; text-decoration: none; display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .file-name a:hover .txt { text-decoration: underline; }
+
+        /* ---------- FILE LIST (details view) ---------- */
+        .cols, .file {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 110px auto;
+            align-items: center;
+            gap: 12px;
+            padding: 0 16px;
+        }
+        .cols {
+            padding-top: 6px; padding-bottom: 6px;
+            color: var(--muted); font-size: 12px;
+            border-bottom: 1px solid var(--line);
+        }
+        .cols span:nth-child(3) { width: 250px; }
+
+        .list { flex: 1; min-height: 0; overflow-y: auto; }
+        .sidebar { overflow-y: auto; }
+
+        .file { min-height: 44px; border-bottom: 1px solid transparent; }
+        .file:hover { background: var(--row-hover); }
+        .file:focus-within { background: var(--row-select); }
+
+        .file-name { display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .file-name .ico { font-size: 22px; flex-shrink: 0; }
+        .file-name .txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .file-size { color: var(--muted); font-size: 13px; }
+
+        .file-actions { display: flex; gap: 2px; width: 250px; justify-content: flex-end; }
+        .file-actions .btn { padding: 5px 8px; font-size: 13px; }
+        .delete-form { margin: 0; }
+
+        .empty { text-align: center; padding: 60px 10px; color: var(--muted); }
+        .empty .big { font-size: 56px; color: var(--folder); }
+
+        /* ---------- STATUS BAR ---------- */
+        .statusbar {
+            display: flex; justify-content: space-between;
+            padding: 6px 14px;
+            background: var(--titlebar);
+            border-top: 1px solid var(--line);
+            color: var(--muted); font-size: 12px;
         }
 
-        /* =========================
-           EMPTY
-        ========================= */
-
-        .empty {
-            text-align: center;
-            padding: 30px 10px;
-            color: #94a3b8;
-        }
-
-        /* =========================
-           MOBILE
-        ========================= */
-
-        @media (max-width: 600px) {
-
-            .container {
-                padding: 20px 12px 40px;
-            }
-
-            .card {
-                padding: 18px;
-            }
-
-            .upload-box {
-                padding: 25px 15px;
-            }
-
-            .file {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .file-actions {
-                display: grid;
-                grid-template-columns: repeat(3, 1fr);
-                width: 100%;
-            }
-
-            .file-actions a,
-            .file-actions button {
-                text-align: center;
-                width: 100%;
-            }
-
-            .delete-form {
-                width: 100%;
-            }
-
-            .delete-form button {
-                width: 100%;
-            }
-        }
-
-        @media (max-width: 400px) {
-
-            .file-actions {
-                grid-template-columns: 1fr;
-            }
+        /* ---------- MOBILE ---------- */
+        @media (max-width: 700px) {
+            .sidebar, .cols { display: none; }
+            .nav-btn { display: none; }
+            .file { grid-template-columns: minmax(0, 1fr) auto; padding: 10px 12px; }
+            .file-size { grid-column: 1; grid-row: 2; padding-left: 32px; margin-top: -8px; }
+            .file-actions { grid-column: 1 / -1; grid-row: 3; width: 100%; justify-content: flex-start; }
         }
     </style>
 </head>
 
 <body>
 
-    <div class="container">
+    <div class="window">
 
-        <!-- =========================
-             HEADER
-        ========================= -->
-
-        <h1>📁 File Transfer</h1>
-
-        <p class="subtitle">
-            Transfer files between your Phone and Linux PC
-        </p>
-
-
-        <!-- =========================
-             FLASH MESSAGES
-        ========================= -->
-
-        {% with messages = get_flashed_messages(with_categories=true) %}
-
-            {% for category, message in messages %}
-
-                <div class="message {% if category == 'error' %}error{% endif %}">
-                    {{ message }}
-                </div>
-
-            {% endfor %}
-
-        {% endwith %}
-
-
-        <!-- =========================
-             UPLOAD CARD
-        ========================= -->
-
-        <div class="card">
-
-            <div class="upload-box">
-
-                <h2>📤 Upload Files</h2>
-
-                <p class="subtitle">
-                    Select one or multiple files
-                </p>
-
-
-                <form
-                    id="uploadForm"
-                    action="{{ url_for('upload') }}"
-                    method="POST"
-                    enctype="multipart/form-data"
-                >
-
-                    <input
-                        id="fileInput"
-                        type="file"
-                        name="files"
-                        multiple
-                        required
-                    >
-
-
-                    <button
-                        id="uploadButton"
-                        class="upload-button"
-                        type="submit"
-                    >
-                        Upload Files
-                    </button>
-
-                </form>
-
-
-                <!-- =========================
-                     PROGRESS
-                ========================= -->
-
-                <div
-                    id="progressContainer"
-                    class="progress-container"
-                >
-
-                    <div class="progress-info">
-
-                        <span id="progressText">
-                            Uploading...
-                        </span>
-
-                        <span id="progressPercent">
-                            0%
-                        </span>
-
-                    </div>
-
-
-                    <div class="progress-wrapper">
-
-                        <div
-                            id="progress"
-                            class="progress"
-                        ></div>
-
-                    </div>
-
-
-                    <div
-                        id="uploadStatus"
-                        class="upload-status"
-                    >
-                        Preparing upload...
-                    </div>
-
-                </div>
-
-            </div>
-
+        <!-- TITLE BAR -->
+        <div class="titlebar">
+            <div class="dots"><i></i><i></i><i></i></div>
+            <div class="tab-title">📁 File Transfer</div>
+            <div style="width:50px"></div>
         </div>
 
-
-        <!-- =========================
-             FILE LIST
-        ========================= -->
-
-        <div class="card">
-
-            <div class="files-header">
-
-                <h2>📂 Files on PC</h2>
-
-                <span class="file-count">
-                    {{ files|length }} file(s)
-                </span>
-
-            </div>
-
-
-            {% if files %}
-
-                {% for file in files %}
-
-                    <div class="file">
-
-
-                        <!-- FILE INFORMATION -->
-
-                        <div class="file-info">
-
-                            <div
-                                class="file-name"
-                                title="{{ file.name }}"
-                            >
-                                📄 {{ file.name }}
-                            </div>
-
-                            <small class="file-size">
-                                {{ file.size|filesize }}
-                            </small>
-
-                        </div>
-
-
-                        <!-- ACTIONS -->
-
-                        <div class="file-actions">
-
-
-                            <!-- VIEW -->
-
-                            <a
-                                class="view"
-                                href="{{ url_for('view_file', filename=file.name) }}"
-                                target="_blank"
-                            >
-                                👁 View
-                            </a>
-
-
-                            <!-- DOWNLOAD -->
-
-                            <a
-                                class="download"
-                                href="{{ url_for('download', filename=file.name) }}"
-                            >
-                                ⬇ Download
-                            </a>
-
-
-                            <!-- DELETE -->
-
-                            <form
-                                class="delete-form"
-                                action="{{ url_for('delete', filename=file.name) }}"
-                                method="POST"
-                            >
-
-                                <button
-                                    class="delete"
-                                    type="submit"
-                                    onclick="return confirm('Are you sure you want to delete this file?')"
-                                >
-                                    🗑 Delete
-                                </button>
-
-                            </form>
-
-
-                        </div>
-
-                    </div>
-
-                {% endfor %}
-
-
+        <!-- TOOLBAR -->
+        <div class="toolbar">
+            {% if current %}
+                <a class="nav-btn link" href="{{ url_for('index', subpath=parent) }}" title="Up one level">↑</a>
             {% else %}
+                <span class="nav-btn off">↑</span>
+            {% endif %}
+            <div class="address">
+                <span>🖥</span>
+                <a href="{{ url_for('index', subpath='') }}">File Transfer</a>
+                {% for crumb in crumbs %}
+                    <span>›</span>
+                    {% if loop.last %}<b>{{ crumb.name }}</b>
+                    {% else %}<a href="{{ url_for('index', subpath=crumb.path) }}">{{ crumb.name }}</a>{% endif %}
+                {% endfor %}
+            </div>
+            <button class="btn" type="button" onclick="window.location.reload()" title="Refresh">⟳ Refresh</button>
+        </div>
 
-                <div class="empty">
+        <div class="body">
 
-                    <div style="font-size: 40px;">
-                        📂
+            <!-- SIDEBAR -->
+            <aside class="sidebar">
+                <div class="group">Quick access</div>
+                <div class="item active">📁 File Transfer</div>
+                <div class="item">📱 Phone</div>
+                <div class="item">🐧 Linux PC</div>
+            </aside>
+
+            <!-- MAIN -->
+            <section class="main">
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% for category, message in messages %}
+                        <div class="message {% if category == 'error' %}error{% endif %}">{{ message }}</div>
+                    {% endfor %}
+                {% endwith %}
+
+                <!-- UPLOAD -->
+                <div class="upload">
+                    <form id="uploadForm" action="{{ url_for('upload') }}" method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="current" value="{{ current }}">
+                        <div class="upload-row">
+                            <span>📄</span>
+                            <input id="fileInput" type="file" name="files" multiple>
+                        </div>
+                        <div class="upload-row" style="margin-top:8px">
+                            <span>📁</span>
+                            <input id="folderInput" type="file" webkitdirectory directory multiple>
+                            <button id="uploadButton" class="btn primary" type="submit">Upload</button>
+                        </div>
+                    </form>
+
+                    <form class="newfolder" action="{{ url_for('make_folder') }}" method="POST">
+                        <input type="hidden" name="current" value="{{ current }}">
+                        <input type="text" name="folder_name" placeholder="New folder name" required maxlength="100">
+                        <button class="btn" type="submit">📁 New folder</button>
+                    </form>
+
+                    <div id="progressContainer" class="progress-container">
+                        <div class="progress-info">
+                            <span id="progressText">Uploading...</span>
+                            <span id="progressPercent">0%</span>
+                        </div>
+                        <div class="progress-wrapper"><div id="progress" class="progress"></div></div>
+                        <div id="uploadStatus" class="upload-status">Preparing upload...</div>
                     </div>
-
-                    <p>
-                        No files uploaded yet.
-                    </p>
-
                 </div>
 
-            {% endif %}
+                <!-- FILE LIST -->
+                <div class="cols">
+                    <span>Name</span>
+                    <span>Size</span>
+                    <span></span>
+                </div>
 
+                <div class="list">
+                    {% if files %}
+                        {% for file in files %}
+                            {% set ext = file.name.rsplit('.', 1)[-1]|lower if '.' in file.name else '' %}
+                            {% if file.is_dir %}{% set icon = '📁' %}
+                            {% elif ext in ['jpg','jpeg','png','gif','webp','svg','bmp'] %}{% set icon = '🖼️' %}
+                            {% elif ext in ['mp4','mkv','avi','mov','webm'] %}{% set icon = '🎞️' %}
+                            {% elif ext in ['mp3','wav','flac','ogg','m4a'] %}{% set icon = '🎵' %}
+                            {% elif ext in ['zip','rar','7z','tar','gz'] %}{% set icon = '🗜️' %}
+                            {% elif ext in ['pdf'] %}{% set icon = '📕' %}
+                            {% elif ext in ['doc','docx','txt','md','odt'] %}{% set icon = '📝' %}
+                            {% elif ext in ['xls','xlsx','csv'] %}{% set icon = '📊' %}
+                            {% elif ext in ['apk','deb','exe','appimage'] %}{% set icon = '📦' %}
+                            {% else %}{% set icon = '📄' %}{% endif %}
+
+                            <div class="file">
+                                <div class="file-name" title="{{ file.name }}">
+                                    {% if file.is_dir %}
+                                        <a href="{{ url_for('index', subpath=file.rel) }}">
+                                            <span class="ico">{{ icon }}</span>
+                                            <span class="txt">{{ file.name }}</span>
+                                        </a>
+                                    {% else %}
+                                        <span class="ico">{{ icon }}</span>
+                                        <span class="txt">{{ file.name }}</span>
+                                    {% endif %}
+                                </div>
+
+                                <div class="file-size">
+                                    {% if file.is_dir %}{{ file.count }} item(s){% else %}{{ file.size|filesize }}{% endif %}
+                                </div>
+
+                                <div class="file-actions">
+                                    {% if file.is_dir %}
+                                        <a class="btn" href="{{ url_for('index', subpath=file.rel) }}">📂 Open</a>
+                                    {% else %}
+                                        <a class="btn" href="{{ url_for('view_file', filename=file.rel) }}" target="_blank">👁 Open</a>
+                                        <a class="btn" href="{{ url_for('download', filename=file.rel) }}">⬇ Save</a>
+                                    {% endif %}
+                                    <form class="delete-form" action="{{ url_for('delete', filename=file.rel) }}" method="POST">
+                                        <button class="btn danger" type="submit"
+                                            onclick="return confirm('{% if file.is_dir %}Delete this folder and everything inside it?{% else %}Are you sure you want to delete this file?{% endif %}')">🗑 Delete</button>
+                                    </form>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty">
+                            <div class="big">📂</div>
+                            <p>This folder is empty. Upload a file or create a folder.</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+            </section>
+        </div>
+
+        <!-- STATUS BAR -->
+        <div class="statusbar">
+            <span>{{ files|length }} item(s)</span>
+            <span>Phone ⇄ Linux PC</span>
         </div>
 
     </div>
 
 
-    <!-- =========================
-         JAVASCRIPT
-    ========================= -->
-
     <script>
-
-        const uploadForm =
-            document.getElementById("uploadForm");
-
-        const fileInput =
-            document.getElementById("fileInput");
-
-        const uploadButton =
-            document.getElementById("uploadButton");
-
-        const progressContainer =
-            document.getElementById("progressContainer");
-
-        const progress =
-            document.getElementById("progress");
-
-        const progressPercent =
-            document.getElementById("progressPercent");
-
-        const progressText =
-            document.getElementById("progressText");
-
-        const uploadStatus =
-            document.getElementById("uploadStatus");
-
-
-        uploadForm.addEventListener(
-            "submit",
-            function (event) {
-
-                // Prevent normal page submission
-                event.preventDefault();
-
-
-                // Check file
-                if (fileInput.files.length === 0) {
-
-                    alert("Please select a file.");
-
-                    return;
-                }
-
-
-                // Create FormData
-                const formData = new FormData();
-
-
-                // Add all selected files
-                for (
-                    const file of fileInput.files
-                ) {
-
-                    formData.append(
-                        "files",
-                        file
-                    );
-
-                }
-
-
-                // Create XHR
-                const xhr =
-                    new XMLHttpRequest();
-
-
-                // Open request
-                xhr.open(
-                    "POST",
-                    uploadForm.action,
-                    true
-                );
-
-
-                // Show progress
-                progressContainer.style.display =
-                    "block";
-
-
-                // Disable button
-                uploadButton.disabled =
-                    true;
-
-                uploadButton.textContent =
-                    "Uploading...";
-
-
-                const startTime =
-                    Date.now();
-
-
-                /*
-                 * Upload Progress
-                 */
-
-                xhr.upload.addEventListener(
-                    "progress",
-                    function (event) {
-
-                        if (
-                            event.lengthComputable
-                        ) {
-
-                            const percent =
-                                Math.round(
-                                    (
-                                        event.loaded /
-                                        event.total
-                                    ) * 100
-                                );
-
-
-                            // Progress bar
-                            progress.style.width =
-                                percent + "%";
-
-
-                            // Percentage
-                            progressPercent.textContent =
-                                percent + "%";
-
-
-                            // Uploaded MB
-                            const uploadedMB =
-                                (
-                                    event.loaded /
-                                    1024 /
-                                    1024
-                                ).toFixed(2);
-
-
-                            // Total MB
-                            const totalMB =
-                                (
-                                    event.total /
-                                    1024 /
-                                    1024
-                                ).toFixed(2);
-
-
-                            // Time
-                            const elapsed =
-                                (
-                                    Date.now() -
-                                    startTime
-                                ) / 1000;
-
-
-                            // Speed
-                            const speed =
-                                event.loaded /
-                                elapsed /
-                                1024 /
-                                1024;
-
-
-                            uploadStatus.textContent =
-                                `${uploadedMB} MB / ${totalMB} MB • ${speed.toFixed(2)} MB/s`;
-
-                        }
-
-                    }
-                );
-
-
-                /*
-                 * Upload Complete
-                 */
-
-                xhr.addEventListener(
-                    "load",
-                    function () {
-
-                        if (
-                            xhr.status >= 200 &&
-                            xhr.status < 400
-                        ) {
-
-                            progress.style.width =
-                                "100%";
-
-                            progressPercent.textContent =
-                                "100%";
-
-                            progressText.textContent =
-                                "Upload complete!";
-
-                            uploadStatus.textContent =
-                                "File uploaded successfully.";
-
-                            uploadButton.textContent =
-                                "Completed ✓";
-
-
-                            // Refresh page
-                            setTimeout(
-                                function () {
-
-                                    window.location.reload();
-
-                                },
-                                800
-                            );
-
-                        }
-
-                        else {
-
-                            showError();
-
-                        }
-
-                    }
-                );
-
-
-                /*
-                 * Upload Error
-                 */
-
-                xhr.addEventListener(
-                    "error",
-                    function () {
-
-                        showError();
-
-                    }
-                );
-
-
-                /*
-                 * Upload Aborted
-                 */
-
-                xhr.addEventListener(
-                    "abort",
-                    function () {
-
-                        showError();
-
-                    }
-                );
-
-
-                /*
-                 * Error Function
-                 */
-
-                function showError() {
-
-                    progressText.textContent =
-                        "Upload failed";
-
-                    uploadStatus.textContent =
-                        "Something went wrong.";
-
-                    uploadButton.disabled =
-                        false;
-
-                    uploadButton.textContent =
-                        "Try Again";
-
-                }
-
-
-                // Send request
-                xhr.send(formData);
-
+        const uploadForm = document.getElementById("uploadForm");
+        const fileInput = document.getElementById("fileInput");
+        const uploadButton = document.getElementById("uploadButton");
+        const progressContainer = document.getElementById("progressContainer");
+        const progress = document.getElementById("progress");
+        const progressPercent = document.getElementById("progressPercent");
+        const progressText = document.getElementById("progressText");
+        const uploadStatus = document.getElementById("uploadStatus");
+
+        uploadForm.addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            const folderInput = document.getElementById("folderInput");
+
+            if (fileInput.files.length === 0 && folderInput.files.length === 0) {
+                alert("Please select a file or a folder.");
+                return;
             }
-        );
 
+            const formData = new FormData();
+            for (const file of fileInput.files) {
+                formData.append("files", file);
+            }
+            // Folder files keep their relative path (e.g. "Photos/2024/a.jpg")
+            for (const file of folderInput.files) {
+                formData.append("files", file, file.webkitRelativePath || file.name);
+            }
+            formData.append("current", uploadForm.elements["current"].value);
+
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", uploadForm.action, true);
+
+            progressContainer.style.display = "block";
+            uploadButton.disabled = true;
+            uploadButton.textContent = "Uploading...";
+
+            const startTime = Date.now();
+
+            xhr.upload.addEventListener("progress", function (e) {
+                if (e.lengthComputable) {
+                    const percent = Math.round((e.loaded / e.total) * 100);
+                    progress.style.width = percent + "%";
+                    progressPercent.textContent = percent + "%";
+
+                    const uploadedMB = (e.loaded / 1024 / 1024).toFixed(2);
+                    const totalMB = (e.total / 1024 / 1024).toFixed(2);
+                    const elapsed = (Date.now() - startTime) / 1000;
+                    const speed = e.loaded / elapsed / 1024 / 1024;
+
+                    uploadStatus.textContent = `${uploadedMB} MB / ${totalMB} MB • ${speed.toFixed(2)} MB/s`;
+                }
+            });
+
+            xhr.addEventListener("load", function () {
+                if (xhr.status >= 200 && xhr.status < 400) {
+                    progress.style.width = "100%";
+                    progressPercent.textContent = "100%";
+                    progressText.textContent = "Upload complete!";
+                    uploadStatus.textContent = "File uploaded successfully.";
+                    uploadButton.textContent = "Completed ✓";
+                    setTimeout(function () { window.location.reload(); }, 800);
+                } else {
+                    showError();
+                }
+            });
+
+            xhr.addEventListener("error", showError);
+            xhr.addEventListener("abort", showError);
+
+            function showError() {
+                progressText.textContent = "Upload failed";
+                uploadStatus.textContent = "Something went wrong.";
+                uploadButton.disabled = false;
+                uploadButton.textContent = "Try again";
+            }
+
+            xhr.send(formData);
+        });
     </script>
 
 </body>
